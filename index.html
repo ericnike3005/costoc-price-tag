@@ -469,6 +469,7 @@ async function updateProduct(id, costStr, priceStr, discountPriceStr, discountSt
     updatedAt: new Date().toISOString()
   });
   expandedId = null;
+  render();
   showToast('가격 업데이트 완료');
 }
 
