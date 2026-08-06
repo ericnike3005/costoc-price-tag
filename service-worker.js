@@ -1,6 +1,8 @@
-const CACHE_NAME = 'costco-price-tag-v3';
+const CACHE_NAME = 'costco-price-tag-v4';
 const ASSETS = [
   './index.html',
+  './style.css',
+  './app.js',
   './manifest.json',
   './icons/icon-192.png',
   './icons/icon-512.png'
@@ -24,6 +26,7 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+  // don't cache firebase/google network calls - always go to network for those
   if (event.request.url.includes('firestore.googleapis.com') ||
       event.request.url.includes('identitytoolkit.googleapis.com') ||
       event.request.url.includes('googleapis.com')) {
