@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<title>코스트코 가격표</title>
+<meta name="theme-color" content="#ECEDE7">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="가격표">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<link rel="icon" href="./icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=JetBrains+Mono:wght@500;700&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #ECEDE7;
+    --card: #FFFFFF;
+    --ink: #1A1A1A;
+    --ink-soft: #6B6D63;
+    --line: #D8D9D0;
+    --tag-red: #C41E3A;
+    --tag-green: #2F7A4F;
+    --tag-amber: #B8790A;
+    --accent-hole: #ECEDE7;
+    --shadow: 0 1px 2px rgba(0,0,0,0.06), 0 4px 10px rgba(0,0,0,0.04);
+  }
+
+  *{ box-sizing: border-box; }
+  html, body{
+    margin:0; padding:0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Noto Sans KR', system-ui, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: contain;
+  }
+
+  .app{
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    padding-bottom: 100px;
+  }
+
+  header{
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--bg);
+    padding: calc(18px + env(safe-area-inset-top)) 16px 10px;
+    border-bottom: 1px solid var(--line);
+  }
+  .brand{
+    display:flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .brand h1{
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    letter-spacing: 0.5px;
+    margin: 0;
+  }
+  .brand .count{
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .search-row{
+    display:flex;
+    gap: 8px;
+  }
+  .search-row input{
+    flex: 1;
+    padding: 11px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: var(--card);
+    font-size: 15px;
+    font-family: inherit;
+    color: var(--ink);
+  }
+  .search-row input:focus{ outline: none; border-color: var(--ink); }
+  .add-btn{
+    width: 44px; height: 44px; flex-shrink: 0;
+    border-radius: 10px; border: none;
+    background: var(--ink); color: #fff;
+    font-size: 22px; line-height: 1; cursor: pointer;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .add-btn:active{ transform: scale(0.96); }
+
+  .install-banner{
+    display: none;
+    margin: 10px 16px 0;
+    padding: 10px 12px;
+    background: #FFF6E0;
+    border: 1px solid #F0DDA0;
+    border-radius: 10px;
+    font-size: 12.5px;
+    color: var(--ink);
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .install-banner.show{ display: flex; }
+  .install-banner button{
+    flex-shrink: 0;
+    padding: 7px 12px;
+    border-radius: 7px;
+    border: none;
+    background: var(--ink);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .list{
+    padding: 14px 16px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .empty{
+    text-align:center;
+    color: var(--ink-soft);
+    padding: 60px 20px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .empty b{ display:block; font-family:'Oswald',sans-serif; font-size:17px; color:var(--ink); margin-bottom:6px; }
+
+  .tag{
+    position: relative;
+    background: var(--card);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 14px 16px 14px 26px;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+  .tag::before{
+    content: '';
+    position: absolute;
+    left: 10px; top: 50%;
+    transform: translateY(-50%);
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent-hole);
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+  .tag-top{
+    display:flex; justify-content: space-between;
+    align-items: flex-start; gap: 10px;
+  }
+  .tag-name{ font-weight: 600; font-size: 15px; line-height: 1.3; word-break: break-word; }
+  .margin-badge{
+    flex-shrink: 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700; font-size: 12px;
+    padding: 3px 8px; border-radius: 6px;
+    white-space: nowrap;
+    transform: rotate(-2deg);
+  }
+  .margin-badge.pos{ background: rgba(47,122,79,0.12); color: var(--tag-green); }
+  .margin-badge.neg{ background: rgba(196,30,58,0.12); color: var(--tag-red); }
+
+  .tag-prices{ display:flex; align-items: baseline; gap: 14px; margin-top: 8px; flex-wrap: wrap; }
+  .price-block .label{ font-size: 10px; color: var(--ink-soft); letter-spacing: 0.5px; }
+  .price-block .value{ font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 17px; }
+  .price-block.sell .value{ color: var(--tag-red); font-size: 19px; }
+
+  .diff-row{ margin-top: 8px; font-family: 'JetBrains Mono', monospace; font-size: 12px; display:flex; align-items:center; gap: 6px; }
+  .diff-row .arrow-up{ color: var(--tag-red); font-weight: 700; }
+  .diff-row .arrow-down{ color: var(--tag-green); font-weight: 700; }
+  .diff-row .no-change{ color: var(--ink-soft); }
+  .updated{ margin-top: 6px; font-size: 11px; color: var(--ink-soft); }
+
+  .edit-panel{ margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--line); display: flex; flex-direction: column; gap: 10px; }
+  .field{ display:flex; flex-direction: column; gap: 4px; }
+  .field label{ font-size: 11px; color: var(--ink-soft); font-weight: 600; }
+  .field input{ padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line); font-family: 'JetBrains Mono', monospace; font-size: 16px; color: var(--ink); }
+  .field input:focus{ outline:none; border-color: var(--ink); }
+  .edit-actions{ display:flex; gap: 8px; margin-top: 4px; }
+  .btn{ flex:1; padding: 11px 0; border-radius: 8px; border: none; font-weight: 600; font-size: 14px; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; }
+  .btn.save{ background: var(--ink); color: #fff; }
+  .btn.cancel{ background: var(--bg); color: var(--ink); border: 1px solid var(--line); }
+  .btn.delete{ background: rgba(196,30,58,0.1); color: var(--tag-red); flex: 0 0 44px; font-size: 16px; }
+  .btn:active{ transform: scale(0.97); }
+
+  .overlay{ position: fixed; inset: 0; background: rgba(0,0,0,0.4); display:flex; align-items: flex-end; z-index: 50; opacity: 0; pointer-events: none; transition: opacity 0.15s; }
+  .overlay.show{ opacity:1; pointer-events:auto; }
+  .sheet{ background: var(--card); width: 100%; max-width: 480px; margin: 0 auto; border-radius: 16px 16px 0 0; padding: 20px 18px calc(24px + env(safe-area-inset-bottom)); transform: translateY(20px); transition: transform 0.18s; }
+  .overlay.show .sheet{ transform: translateY(0); }
+  .sheet h2{ font-family: 'Oswald', sans-serif; font-size: 18px; margin: 0 0 14px; }
+
+  .toast{ position: fixed; bottom: calc(20px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 20px; font-size: 13px; z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+  .toast.show{ opacity: 1; }
+
+  .footer-actions{
+    padding: 16px;
+    display: flex;
+    justify-content: center;
+  }
+  .footer-actions a{
+    font-size: 12px;
+    color: var(--ink-soft);
+    text-decoration: underline;
+  }
+
+  ::selection{ background: rgba(196,30,58,0.15); }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header>
+    <div class="brand">
+      <h1>코스트코 가격표</h1>
+      <span class="count" id="countLabel">0개 상품</span>
+    </div>
+    <div class="search-row">
+      <input type="text" id="searchInput" placeholder="상품 검색...">
+      <button class="add-btn" id="addBtn">+</button>
+    </div>
+  </header>
+
+  <div class="install-banner" id="installBanner">
+    <span>홈 화면에 추가하면 앱처럼 쓸 수 있어</span>
+    <button id="installBtn">설치</button>
+  </div>
+
+  <div class="list" id="list"></div>
+
+  <div class="footer-actions">
+    <a id="exportBtn" href="javascript:void(0)">데이터 백업(내보내기)</a>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="sheet">
+    <h2>새 상품 등록</h2>
+    <div class="field">
+      <label>상품명</label>
+      <input type="text" id="newName" placeholder="예: 커클랜드 견과류 세트">
+    </div>
+    <div class="field" style="margin-top:10px;">
+      <label>원가 (원)</label>
+      <input type="number" inputmode="numeric" id="newCost" placeholder="0">
+    </div>
+    <div class="field" style="margin-top:10px;">
+      <label>판매가 (원)</label>
+      <input type="number" inputmode="numeric" id="newPrice" placeholder="0">
+    </div>
+    <div class="edit-actions" style="margin-top:16px;">
+      <button class="btn cancel" id="cancelAdd">취소</button>
+      <button class="btn save" id="saveAdd">등록</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY = 'costco_products_v1';
+let products = [];
+let expandedId = null;
+
+const listEl = document.getElementById('list');
+const countLabel = document.getElementById('countLabel');
+const searchInput = document.getElementById('searchInput');
+const overlay = document.getElementById('overlay');
+
+function fmt(n){
+  if(n === null || n === undefined || isNaN(n)) return '-';
+  return Number(n).toLocaleString('ko-KR');
+}
+
+function marginPct(cost, price){
+  if(!price || price <= 0) return 0;
+  return ((price - cost) / price) * 100;
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=> t.classList.remove('show'), 1600);
+}
+
+function loadProducts(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    products = raw ? JSON.parse(raw) : [];
+  }catch(e){
+    products = [];
+  }
+  render();
+}
+
+function saveProducts(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
+  }catch(e){
+    showToast('저장 실패, 저장공간을 확인해줘');
+  }
+}
+
+function timeAgo(iso){
+  if(!iso) return '';
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const min = Math.floor(diffMs/60000);
+  if(min < 1) return '방금 수정';
+  if(min < 60) return min + '분 전 수정';
+  const hr = Math.floor(min/60);
+  if(hr < 24) return hr + '시간 전 수정';
+  const day = Math.floor(hr/24);
+  return day + '일 전 수정';
+}
+
+function render(){
+  const query = searchInput.value.trim().toLowerCase();
+  const filtered = products
+    .filter(p => p.name.toLowerCase().includes(query))
+    .sort((a,b) => a.name.localeCompare(b.name, 'ko'));
+
+  countLabel.textContent = products.length + '개 상품';
+
+  if(filtered.length === 0){
+    listEl.innerHTML = `<div class="empty">
+      <b>${products.length === 0 ? '등록된 상품이 없어' : '검색 결과 없음'}</b>
+      ${products.length === 0 ? '+ 버튼으로 첫 상품을 등록해봐' : '다른 검색어로 찾아봐'}
+    </div>`;
+    return;
+  }
+
+  listEl.innerHTML = filtered.map(p => renderCard(p)).join('');
+
+  filtered.forEach(p => {
+    const card = document.getElementById('card-' + p.id);
+    card.addEventListener('click', (e) => {
+      if(e.target.closest('.edit-panel')) return;
+      expandedId = expandedId === p.id ? null : p.id;
+      render();
+    });
+
+    if(expandedId === p.id){
+      const costInput = document.getElementById('editCost-' + p.id);
+      const priceInput = document.getElementById('editPrice-' + p.id);
+      document.getElementById('saveEdit-' + p.id).addEventListener('click', (e) => {
+        e.stopPropagation();
+        updateProduct(p.id, costInput.value, priceInput.value);
+      });
+      document.getElementById('cancelEdit-' + p.id).addEventListener('click', (e) => {
+        e.stopPropagation();
+        expandedId = null;
+        render();
+      });
+      document.getElementById('deleteBtn-' + p.id).addEventListener('click', (e) => {
+        e.stopPropagation();
+        deleteProduct(p.id);
+      });
+    }
+  });
+}
+
+function renderCard(p){
+  const margin = marginPct(p.cost, p.price);
+  const marginClass = margin >= 0 ? 'pos' : 'neg';
+  const isExpanded = expandedId === p.id;
+
+  let diffHtml = '';
+  if(p.prevPrice !== null && p.prevPrice !== undefined && p.prevPrice !== p.price){
+    const diff = p.price - p.prevPrice;
+    if(diff > 0){
+      diffHtml = `<div class="diff-row"><span class="arrow-up">▲ +${fmt(diff)}원</span><span style="color:var(--ink-soft)">(이전 ${fmt(p.prevPrice)}원)</span></div>`;
+    } else if(diff < 0){
+      diffHtml = `<div class="diff-row"><span class="arrow-down">▼ ${fmt(diff)}원</span><span style="color:var(--ink-soft)">(이전 ${fmt(p.prevPrice)}원)</span></div>`;
+    }
+  } else if(p.prevPrice === p.price && p.prevPrice !== null && p.prevPrice !== undefined){
+    diffHtml = `<div class="diff-row"><span class="no-change">- 변동 없음</span></div>`;
+  }
+
+  return `
+  <div class="tag" id="card-${p.id}">
+    <div class="tag-top">
+      <div class="tag-name">${escapeHtml(p.name)}</div>
+      <div class="margin-badge ${marginClass}">마진 ${margin.toFixed(1)}%</div>
+    </div>
+    <div class="tag-prices">
+      <div class="price-block">
+        <div class="label">원가</div>
+        <div class="value">${fmt(p.cost)}</div>
+      </div>
+      <div class="price-block sell">
+        <div class="label">판매가</div>
+        <div class="value">${fmt(p.price)}</div>
+      </div>
+    </div>
+    ${diffHtml}
+    <div class="updated">${timeAgo(p.updatedAt)}</div>
+    ${isExpanded ? `
+    <div class="edit-panel">
+      <div class="field">
+        <label>원가 (원)</label>
+        <input type="number" inputmode="numeric" id="editCost-${p.id}" value="${p.cost}">
+      </div>
+      <div class="field">
+        <label>판매가 (원)</label>
+        <input type="number" inputmode="numeric" id="editPrice-${p.id}" value="${p.price}">
+      </div>
+      <div class="edit-actions">
+        <button class="btn delete" id="deleteBtn-${p.id}">삭제</button>
+        <button class="btn cancel" id="cancelEdit-${p.id}">취소</button>
+        <button class="btn save" id="saveEdit-${p.id}">저장</button>
+      </div>
+    </div>` : ''}
+  </div>`;
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function updateProduct(id, costStr, priceStr){
+  const cost = Number(costStr) || 0;
+  const price = Number(priceStr) || 0;
+  const idx = products.findIndex(p => p.id === id);
+  if(idx === -1) return;
+
+  const old = products[idx];
+  products[idx] = {
+    ...old,
+    prevPrice: old.price,
+    prevCost: old.cost,
+    cost,
+    price,
+    updatedAt: new Date().toISOString()
+  };
+  expandedId = null;
+  saveProducts();
+  render();
+  showToast('가격 업데이트 완료');
+}
+
+function deleteProduct(id){
+  products = products.filter(p => p.id !== id);
+  expandedId = null;
+  saveProducts();
+  render();
+  showToast('삭제 완료');
+}
+
+function addProduct(name, cost, price){
+  const newProduct = {
+    id: 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
+    name, cost, price,
+    prevPrice: null, prevCost: null,
+    updatedAt: new Date().toISOString()
+  };
+  products.push(newProduct);
+  saveProducts();
+  render();
+}
+
+// Events
+searchInput.addEventListener('input', render);
+
+document.getElementById('addBtn').addEventListener('click', () => {
+  document.getElementById('newName').value = '';
+  document.getElementById('newCost').value = '';
+  document.getElementById('newPrice').value = '';
+  overlay.classList.add('show');
+});
+
+document.getElementById('cancelAdd').addEventListener('click', () => {
+  overlay.classList.remove('show');
+});
+
+overlay.addEventListener('click', (e) => {
+  if(e.target === overlay) overlay.classList.remove('show');
+});
+
+document.getElementById('saveAdd').addEventListener('click', () => {
+  const name = document.getElementById('newName').value.trim();
+  const cost = Number(document.getElementById('newCost').value) || 0;
+  const price = Number(document.getElementById('newPrice').value) || 0;
+  if(!name){
+    showToast('상품명을 입력해줘');
+    return;
+  }
+  addProduct(name, cost, price);
+  overlay.classList.remove('show');
+  showToast('상품 등록 완료');
+});
+
+document.getElementById('exportBtn').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify(products, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'costco_products_backup_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+loadProducts();
+
+// PWA install prompt
+let deferredPrompt = null;
+const installBanner = document.getElementById('installBanner');
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  installBanner.classList.add('show');
+});
+document.getElementById('installBtn').addEventListener('click', async () => {
+  if(!deferredPrompt) return;
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  installBanner.classList.remove('show');
+});
+window.addEventListener('appinstalled', () => {
+  installBanner.classList.remove('show');
+});
+
+// Service worker registration
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js').catch(() => {});
+  });
+}
+</script>
+
+</body>
+</html>
