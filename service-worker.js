@@ -1,4 +1,4 @@
-const CACHE_NAME = 'costco-price-tag-v1';
+const CACHE_NAME = 'costco-price-tag-v2';
 const ASSETS = [
   './index.html',
   './manifest.json',
@@ -24,6 +24,12 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+  // don't cache firebase/google network calls - always go to network for those
+  if (event.request.url.includes('firestore.googleapis.com') ||
+      event.request.url.includes('identitytoolkit.googleapis.com') ||
+      event.request.url.includes('googleapis.com')) {
+    return;
+  }
   event.respondWith(
     caches.match(event.request).then((cached) => {
       const network = fetch(event.request)

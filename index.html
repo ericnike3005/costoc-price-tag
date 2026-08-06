@@ -14,6 +14,11 @@
 <link rel="icon" href="./icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=JetBrains+Mono:wght@500;700&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
 <style>
   :root{
     --bg: #ECEDE7;
@@ -27,146 +32,110 @@
     --accent-hole: #ECEDE7;
     --shadow: 0 1px 2px rgba(0,0,0,0.06), 0 4px 10px rgba(0,0,0,0.04);
   }
-
   *{ box-sizing: border-box; }
   html, body{
-    margin:0; padding:0;
-    background: var(--bg);
-    color: var(--ink);
+    margin:0; padding:0; background: var(--bg); color: var(--ink);
     font-family: 'Noto Sans KR', system-ui, sans-serif;
     -webkit-tap-highlight-color: transparent;
     overscroll-behavior-y: contain;
   }
+  .app{ max-width: 480px; margin: 0 auto; min-height: 100vh; padding-bottom: 100px; }
 
-  .app{
-    max-width: 480px;
-    margin: 0 auto;
+  /* Auth screen */
+  .auth-screen{
     min-height: 100vh;
-    padding-bottom: 100px;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 24px; max-width: 400px; margin: 0 auto;
   }
+  .auth-screen h1{
+    font-family: 'Oswald', sans-serif; font-size: 26px; margin: 0 0 4px;
+  }
+  .auth-screen .sub{ color: var(--ink-soft); font-size: 13px; margin-bottom: 28px; }
+  .auth-field{ margin-bottom: 12px; }
+  .auth-field label{ font-size: 12px; color: var(--ink-soft); font-weight: 600; display:block; margin-bottom:4px; }
+  .auth-field input{
+    width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--line);
+    font-size: 15px; font-family: inherit;
+  }
+  .auth-field input:focus{ outline:none; border-color: var(--ink); }
+  .auth-submit{
+    width: 100%; padding: 13px; border-radius: 10px; border: none;
+    background: var(--ink); color: #fff; font-weight: 600; font-size: 15px;
+    cursor: pointer; margin-top: 6px;
+  }
+  .auth-submit:disabled{ opacity: 0.5; }
+  .auth-toggle{
+    text-align: center; margin-top: 16px; font-size: 13px; color: var(--ink-soft);
+  }
+  .auth-toggle a{ color: var(--ink); font-weight: 600; text-decoration: underline; cursor: pointer; }
+  .auth-error{
+    background: rgba(196,30,58,0.08); color: var(--tag-red);
+    padding: 10px 12px; border-radius: 8px; font-size: 13px; margin-bottom: 14px;
+    display: none;
+  }
+  .auth-error.show{ display: block; }
+  .auth-loading{ text-align:center; padding: 60px 20px; color: var(--ink-soft); font-size: 14px; }
 
+  /* Header */
   header{
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    background: var(--bg);
+    position: sticky; top: 0; z-index: 10; background: var(--bg);
     padding: calc(18px + env(safe-area-inset-top)) 16px 10px;
     border-bottom: 1px solid var(--line);
   }
-  .brand{
-    display:flex;
-    align-items: baseline;
-    justify-content: space-between;
-    margin-bottom: 12px;
-  }
-  .brand h1{
-    font-family: 'Oswald', sans-serif;
-    font-weight: 700;
-    font-size: 22px;
-    letter-spacing: 0.5px;
-    margin: 0;
-  }
-  .brand .count{
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    color: var(--ink-soft);
-  }
-  .search-row{
-    display:flex;
-    gap: 8px;
-  }
+  .brand{ display:flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
+  .brand h1{ font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 22px; letter-spacing: 0.5px; margin: 0; }
+  .brand-right{ display:flex; align-items:center; gap:10px; }
+  .brand .count{ font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-soft); }
+  .logout-btn{ font-size: 11px; color: var(--ink-soft); text-decoration: underline; background:none; border:none; cursor:pointer; font-family: inherit; padding: 0; }
+  .search-row{ display:flex; gap: 8px; }
   .search-row input{
-    flex: 1;
-    padding: 11px 12px;
-    border-radius: 10px;
-    border: 1px solid var(--line);
-    background: var(--card);
-    font-size: 15px;
-    font-family: inherit;
-    color: var(--ink);
+    flex: 1; padding: 11px 12px; border-radius: 10px; border: 1px solid var(--line);
+    background: var(--card); font-size: 15px; font-family: inherit; color: var(--ink);
   }
   .search-row input:focus{ outline: none; border-color: var(--ink); }
   .add-btn{
-    width: 44px; height: 44px; flex-shrink: 0;
-    border-radius: 10px; border: none;
-    background: var(--ink); color: #fff;
-    font-size: 22px; line-height: 1; cursor: pointer;
+    width: 44px; height: 44px; flex-shrink: 0; border-radius: 10px; border: none;
+    background: var(--ink); color: #fff; font-size: 22px; line-height: 1; cursor: pointer;
     display:flex; align-items:center; justify-content:center;
   }
   .add-btn:active{ transform: scale(0.96); }
 
+  .sync-badge{
+    display:flex; align-items:center; gap:5px;
+    font-size: 10.5px; color: var(--ink-soft); margin-top: 8px;
+  }
+  .sync-dot{ width:6px; height:6px; border-radius:50%; background: var(--tag-green); flex-shrink:0; }
+  .sync-dot.offline{ background: var(--tag-amber); }
+
   .install-banner{
-    display: none;
-    margin: 10px 16px 0;
-    padding: 10px 12px;
-    background: #FFF6E0;
-    border: 1px solid #F0DDA0;
-    border-radius: 10px;
-    font-size: 12.5px;
-    color: var(--ink);
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
+    display: none; margin: 10px 16px 0; padding: 10px 12px;
+    background: #FFF6E0; border: 1px solid #F0DDA0; border-radius: 10px;
+    font-size: 12.5px; color: var(--ink); align-items: center; justify-content: space-between; gap: 10px;
   }
   .install-banner.show{ display: flex; }
   .install-banner button{
-    flex-shrink: 0;
-    padding: 7px 12px;
-    border-radius: 7px;
-    border: none;
-    background: var(--ink);
-    color: #fff;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
+    flex-shrink: 0; padding: 7px 12px; border-radius: 7px; border: none;
+    background: var(--ink); color: #fff; font-size: 12px; font-weight: 600; cursor: pointer;
   }
 
-  .list{
-    padding: 14px 16px 0;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .empty{
-    text-align:center;
-    color: var(--ink-soft);
-    padding: 60px 20px;
-    font-size: 14px;
-    line-height: 1.6;
-  }
+  .list{ padding: 14px 16px 0; display: flex; flex-direction: column; gap: 10px; }
+  .empty{ text-align:center; color: var(--ink-soft); padding: 60px 20px; font-size: 14px; line-height: 1.6; }
   .empty b{ display:block; font-family:'Oswald',sans-serif; font-size:17px; color:var(--ink); margin-bottom:6px; }
 
   .tag{
-    position: relative;
-    background: var(--card);
-    border-radius: 12px;
-    box-shadow: var(--shadow);
-    padding: 14px 16px 14px 26px;
-    cursor: pointer;
-    border: 1px solid transparent;
+    position: relative; background: var(--card); border-radius: 12px; box-shadow: var(--shadow);
+    padding: 14px 16px 14px 26px; cursor: pointer; border: 1px solid transparent;
   }
   .tag::before{
-    content: '';
-    position: absolute;
-    left: 10px; top: 50%;
-    transform: translateY(-50%);
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: var(--accent-hole);
+    content: ''; position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+    width: 8px; height: 8px; border-radius: 50%; background: var(--accent-hole);
     box-shadow: inset 0 0 0 1px var(--line);
   }
-  .tag-top{
-    display:flex; justify-content: space-between;
-    align-items: flex-start; gap: 10px;
-  }
+  .tag-top{ display:flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
   .tag-name{ font-weight: 600; font-size: 15px; line-height: 1.3; word-break: break-word; }
   .margin-badge{
-    flex-shrink: 0;
-    font-family: 'JetBrains Mono', monospace;
-    font-weight: 700; font-size: 12px;
-    padding: 3px 8px; border-radius: 6px;
-    white-space: nowrap;
-    transform: rotate(-2deg);
+    flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 12px;
+    padding: 3px 8px; border-radius: 6px; white-space: nowrap; transform: rotate(-2deg);
   }
   .margin-badge.pos{ background: rgba(47,122,79,0.12); color: var(--tag-green); }
   .margin-badge.neg{ background: rgba(196,30,58,0.12); color: var(--tag-red); }
@@ -203,31 +172,50 @@
   .toast{ position: fixed; bottom: calc(20px + env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 20px; font-size: 13px; z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.2s; }
   .toast.show{ opacity: 1; }
 
-  .footer-actions{
-    padding: 16px;
-    display: flex;
-    justify-content: center;
-  }
-  .footer-actions a{
-    font-size: 12px;
-    color: var(--ink-soft);
-    text-decoration: underline;
-  }
+  .footer-actions{ padding: 16px; display: flex; justify-content: center; }
+  .footer-actions a{ font-size: 12px; color: var(--ink-soft); text-decoration: underline; }
 
   ::selection{ background: rgba(196,30,58,0.15); }
 </style>
 </head>
 <body>
 
-<div class="app">
+<!-- AUTH SCREEN -->
+<div class="auth-screen" id="authScreen">
+  <h1>코스트코 가격표</h1>
+  <div class="sub" id="authSub">로그인해서 모든 기기에서 같은 데이터를 봐</div>
+  <div class="auth-error" id="authError"></div>
+  <div class="auth-field">
+    <label>이메일</label>
+    <input type="email" id="authEmail" autocomplete="username">
+  </div>
+  <div class="auth-field">
+    <label>비밀번호</label>
+    <input type="password" id="authPassword" autocomplete="current-password">
+  </div>
+  <button class="auth-submit" id="authSubmit">로그인</button>
+  <div class="auth-toggle">
+    <span id="authToggleText">계정이 없어?</span> <a id="authToggleLink">회원가입</a>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div class="app" id="app" style="display:none;">
   <header>
     <div class="brand">
       <h1>코스트코 가격표</h1>
-      <span class="count" id="countLabel">0개 상품</span>
+      <div class="brand-right">
+        <span class="count" id="countLabel">0개 상품</span>
+        <button class="logout-btn" id="logoutBtn">로그아웃</button>
+      </div>
     </div>
     <div class="search-row">
       <input type="text" id="searchInput" placeholder="상품 검색...">
       <button class="add-btn" id="addBtn">+</button>
+    </div>
+    <div class="sync-badge">
+      <span class="sync-dot" id="syncDot"></span>
+      <span id="syncText">동기화됨</span>
     </div>
   </header>
 
@@ -268,50 +256,49 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const STORAGE_KEY = 'costco_products_v1';
+// ---- Firebase config ----
+const firebaseConfig = {
+  apiKey: "AIzaSyCCLuJoVC8VLGhH0ljDWFKPeEKF73B8Pdw",
+  authDomain: "costco-price-tag.firebaseapp.com",
+  projectId: "costco-price-tag",
+  storageBucket: "costco-price-tag.firebasestorage.app",
+  messagingSenderId: "667155129804",
+  appId: "1:667155129804:web:bf3e473d2d3c5c0b8f2969"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// enable offline cache (works offline, syncs when back online)
+db.enablePersistence().catch(() => {});
+
 let products = [];
 let expandedId = null;
+let unsubscribeSnapshot = null;
+let isSignup = false;
 
 const listEl = document.getElementById('list');
 const countLabel = document.getElementById('countLabel');
 const searchInput = document.getElementById('searchInput');
 const overlay = document.getElementById('overlay');
+const authScreen = document.getElementById('authScreen');
+const appEl = document.getElementById('app');
+const authError = document.getElementById('authError');
 
 function fmt(n){
   if(n === null || n === undefined || isNaN(n)) return '-';
   return Number(n).toLocaleString('ko-KR');
 }
-
 function marginPct(cost, price){
   if(!price || price <= 0) return 0;
   return ((price - cost) / price) * 100;
 }
-
 function showToast(msg){
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(()=> t.classList.remove('show'), 1600);
 }
-
-function loadProducts(){
-  try{
-    const raw = localStorage.getItem(STORAGE_KEY);
-    products = raw ? JSON.parse(raw) : [];
-  }catch(e){
-    products = [];
-  }
-  render();
-}
-
-function saveProducts(){
-  try{
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
-  }catch(e){
-    showToast('저장 실패, 저장공간을 확인해줘');
-  }
-}
-
 function timeAgo(iso){
   if(!iso) return '';
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -324,6 +311,119 @@ function timeAgo(iso){
   return day + '일 전 수정';
 }
 
+// ---- AUTH ----
+auth.onAuthStateChanged((user) => {
+  if(user){
+    authScreen.style.display = 'none';
+    appEl.style.display = 'block';
+    subscribeToProducts(user.uid);
+  } else {
+    authScreen.style.display = 'flex';
+    appEl.style.display = 'none';
+    if(unsubscribeSnapshot){ unsubscribeSnapshot(); unsubscribeSnapshot = null; }
+    products = [];
+  }
+});
+
+function showAuthError(msg){
+  authError.textContent = msg;
+  authError.classList.add('show');
+}
+function clearAuthError(){
+  authError.classList.remove('show');
+}
+
+document.getElementById('authToggleLink').addEventListener('click', () => {
+  isSignup = !isSignup;
+  clearAuthError();
+  document.getElementById('authSubmit').textContent = isSignup ? '회원가입' : '로그인';
+  document.getElementById('authToggleText').textContent = isSignup ? '이미 계정이 있어?' : '계정이 없어?';
+  document.getElementById('authToggleLink').textContent = isSignup ? '로그인' : '회원가입';
+});
+
+document.getElementById('authSubmit').addEventListener('click', async () => {
+  clearAuthError();
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  if(!email || !password){
+    showAuthError('이메일과 비밀번호를 입력해줘');
+    return;
+  }
+  const btn = document.getElementById('authSubmit');
+  btn.disabled = true;
+  try{
+    if(isSignup){
+      await auth.createUserWithEmailAndPassword(email, password);
+    } else {
+      await auth.signInWithEmailAndPassword(email, password);
+    }
+  }catch(e){
+    const messages = {
+      'auth/invalid-email': '이메일 형식이 올바르지 않아',
+      'auth/user-not-found': '가입되지 않은 이메일이야',
+      'auth/wrong-password': '비밀번호가 틀렸어',
+      'auth/email-already-in-use': '이미 가입된 이메일이야',
+      'auth/weak-password': '비밀번호는 6자 이상이어야 해',
+      'auth/invalid-credential': '이메일 또는 비밀번호가 틀렸어'
+    };
+    showAuthError(messages[e.code] || e.message);
+  }
+  btn.disabled = false;
+});
+
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  auth.signOut();
+});
+
+// ---- FIRESTORE SYNC ----
+function subscribeToProducts(uid){
+  if(unsubscribeSnapshot) unsubscribeSnapshot();
+  document.getElementById('syncText').textContent = '동기화 중...';
+  unsubscribeSnapshot = db.collection('products')
+    .where('ownerId', '==', uid)
+    .onSnapshot((snapshot) => {
+      products = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      document.getElementById('syncDot').classList.remove('offline');
+      document.getElementById('syncText').textContent = '동기화됨';
+      render();
+    }, (err) => {
+      document.getElementById('syncDot').classList.add('offline');
+      document.getElementById('syncText').textContent = '오프라인 (로컬 캐시)';
+    });
+}
+
+async function addProduct(name, cost, price){
+  const uid = auth.currentUser.uid;
+  await db.collection('products').add({
+    name, cost, price,
+    prevPrice: null, prevCost: null,
+    updatedAt: new Date().toISOString(),
+    ownerId: uid
+  });
+}
+
+async function updateProduct(id, costStr, priceStr){
+  const cost = Number(costStr) || 0;
+  const price = Number(priceStr) || 0;
+  const old = products.find(p => p.id === id);
+  if(!old) return;
+  await db.collection('products').doc(id).update({
+    prevPrice: old.price,
+    prevCost: old.cost,
+    cost, price,
+    updatedAt: new Date().toISOString()
+  });
+  expandedId = null;
+  showToast('가격 업데이트 완료');
+}
+
+async function deleteProduct(id){
+  await db.collection('products').doc(id).delete();
+  expandedId = null;
+  showToast('삭제 완료');
+}
+
+// ---- RENDER ----
 function render(){
   const query = searchInput.value.trim().toLowerCase();
   const filtered = products
@@ -349,7 +449,6 @@ function render(){
       expandedId = expandedId === p.id ? null : p.id;
       render();
     });
-
     if(expandedId === p.id){
       const costInput = document.getElementById('editCost-' + p.id);
       const priceInput = document.getElementById('editPrice-' + p.id);
@@ -430,48 +529,7 @@ function escapeHtml(str){
   return div.innerHTML;
 }
 
-function updateProduct(id, costStr, priceStr){
-  const cost = Number(costStr) || 0;
-  const price = Number(priceStr) || 0;
-  const idx = products.findIndex(p => p.id === id);
-  if(idx === -1) return;
-
-  const old = products[idx];
-  products[idx] = {
-    ...old,
-    prevPrice: old.price,
-    prevCost: old.cost,
-    cost,
-    price,
-    updatedAt: new Date().toISOString()
-  };
-  expandedId = null;
-  saveProducts();
-  render();
-  showToast('가격 업데이트 완료');
-}
-
-function deleteProduct(id){
-  products = products.filter(p => p.id !== id);
-  expandedId = null;
-  saveProducts();
-  render();
-  showToast('삭제 완료');
-}
-
-function addProduct(name, cost, price){
-  const newProduct = {
-    id: 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
-    name, cost, price,
-    prevPrice: null, prevCost: null,
-    updatedAt: new Date().toISOString()
-  };
-  products.push(newProduct);
-  saveProducts();
-  render();
-}
-
-// Events
+// ---- Events ----
 searchInput.addEventListener('input', render);
 
 document.getElementById('addBtn').addEventListener('click', () => {
@@ -480,16 +538,13 @@ document.getElementById('addBtn').addEventListener('click', () => {
   document.getElementById('newPrice').value = '';
   overlay.classList.add('show');
 });
-
 document.getElementById('cancelAdd').addEventListener('click', () => {
   overlay.classList.remove('show');
 });
-
 overlay.addEventListener('click', (e) => {
   if(e.target === overlay) overlay.classList.remove('show');
 });
-
-document.getElementById('saveAdd').addEventListener('click', () => {
+document.getElementById('saveAdd').addEventListener('click', async () => {
   const name = document.getElementById('newName').value.trim();
   const cost = Number(document.getElementById('newCost').value) || 0;
   const price = Number(document.getElementById('newPrice').value) || 0;
@@ -497,7 +552,7 @@ document.getElementById('saveAdd').addEventListener('click', () => {
     showToast('상품명을 입력해줘');
     return;
   }
-  addProduct(name, cost, price);
+  await addProduct(name, cost, price);
   overlay.classList.remove('show');
   showToast('상품 등록 완료');
 });
@@ -511,8 +566,6 @@ document.getElementById('exportBtn').addEventListener('click', () => {
   a.click();
   URL.revokeObjectURL(url);
 });
-
-loadProducts();
 
 // PWA install prompt
 let deferredPrompt = null;
@@ -533,7 +586,7 @@ window.addEventListener('appinstalled', () => {
   installBanner.classList.remove('show');
 });
 
-// Service worker registration
+// Service worker
 if('serviceWorker' in navigator){
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./service-worker.js').catch(() => {});
