@@ -257,12 +257,12 @@
       <input type="number" inputmode="numeric" id="newCost" placeholder="0">
     </div>
     <div class="field" style="margin-top:10px;">
-      <label>판매가 (원)</label>
-      <input type="number" inputmode="numeric" id="newPrice" placeholder="0">
-    </div>
-    <div class="field" style="margin-top:10px;">
       <label>할인가 (원, 코스트코 자체 할인 · 선택)</label>
       <input type="number" inputmode="numeric" id="newDiscountPrice" placeholder="할인 없으면 비워둬">
+    </div>
+    <div class="field" style="margin-top:10px;">
+      <label>판매가 (원)</label>
+      <input type="number" inputmode="numeric" id="newPrice" placeholder="0">
     </div>
     <div style="display:flex; gap:10px; margin-top:10px;">
       <div class="field" style="flex:1;">
@@ -532,16 +532,16 @@ function renderCard(p){
   const marginClass = margin >= 0 ? 'pos' : 'neg';
   const isExpanded = expandedId === p.id;
 
-  let diffHtml = '';
-  if(p.prevPrice !== null && p.prevPrice !== undefined && p.prevPrice !== p.price){
-    const diff = p.price - p.prevPrice;
+let diffHtml = '';
+  if(p.prevCost !== null && p.prevCost !== undefined && p.prevCost !== p.cost){
+    const diff = p.cost - p.prevCost;
     if(diff > 0){
-      diffHtml = `<div class="diff-row"><span class="arrow-up">▲ +${fmt(diff)}원</span><span style="color:var(--ink-soft)">(이전 ${fmt(p.prevPrice)}원)</span></div>`;
+      diffHtml = `<div class="diff-row"><span class="arrow-up">▲ +${fmt(diff)}원</span><span style="color:var(--ink-soft)">(이전 원가 ${fmt(p.prevCost)}원)</span></div>`;
     } else if(diff < 0){
-      diffHtml = `<div class="diff-row"><span class="arrow-down">▼ ${fmt(diff)}원</span><span style="color:var(--ink-soft)">(이전 ${fmt(p.prevPrice)}원)</span></div>`;
+      diffHtml = `<div class="diff-row"><span class="arrow-down">▼ ${fmt(diff)}원</span><span style="color:var(--ink-soft)">(이전 원가 ${fmt(p.prevCost)}원)</span></div>`;
     }
-  } else if(p.prevPrice === p.price && p.prevPrice !== null && p.prevPrice !== undefined){
-    diffHtml = `<div class="diff-row"><span class="no-change">- 변동 없음</span></div>`;
+  } else if(p.prevCost === p.cost && p.prevCost !== null && p.prevCost !== undefined){
+    diffHtml = `<div class="diff-row"><span class="no-change">- 원가 변동 없음</span></div>`;
   }
 
   const dStatus = discountStatus(p);
@@ -591,13 +591,14 @@ function renderCard(p){
         <input type="number" inputmode="numeric" id="editCost-${p.id}" value="${p.cost}">
       </div>
       <div class="field">
-        <label>판매가 (원)</label>
-        <input type="number" inputmode="numeric" id="editPrice-${p.id}" value="${p.price}">
-      </div>
-      <div class="field">
         <label>할인가 (원, 선택)</label>
         <input type="number" inputmode="numeric" id="editDiscountPrice-${p.id}" value="${p.discountPrice ?? ''}" placeholder="할인 없으면 비워둬">
       </div>
+      <div class="field">
+        <label>판매가 (원)</label>
+        <input type="number" inputmode="numeric" id="editPrice-${p.id}" value="${p.price}">
+      </div>
+
       <div style="display:flex; gap:10px;">
         <div class="field" style="flex:1;">
           <label>할인 시작일</label>
